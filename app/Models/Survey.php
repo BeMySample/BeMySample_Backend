@@ -9,11 +9,15 @@ class Survey extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'judul', 'deskripsi', 'kategori'
+    ];
+
     public function peneliti() {
         return $this->belongsTo(User::class, 'id_peneliti');
     }
 
-    public function surveyRespondens() {
-        return $this->hasMany(SurveyResponden::class, 'id_survey');
-    }
+    // public function surveyRespondens() {
+    //     return $this->hasMany(SurveyResponden::class, 'id_survey');
+    // }
 }
