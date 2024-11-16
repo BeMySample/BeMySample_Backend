@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('progress_penelitians', function (Blueprint $table) {
+        Schema::create('survey_soal', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('survey_id');
+            $table->string('heading');
+            $table->string('desc')->nullable();
+            $table->foreignId('tipe_soal')->constrained('soal_type');
+            $table->foreignId('jawaban')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('progress_penelitians');
+        Schema::dropIfExists('survey_soal');
     }
 };

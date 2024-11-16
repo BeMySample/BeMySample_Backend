@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Survey;
+use App\Models\SoalType;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-class SurveyController extends Controller
+class SoalTypeController extends Controller
 {
     public function index()
     {
-        $survey = Survey::all();
+        $soalType = SoalType::all();
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dimuat',
-            'data' => $survey
+            'data' => $soalType
         ]);
     }
 
@@ -23,25 +23,16 @@ class SurveyController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id'=> 'required|integer',
-                'judul_survey'=> 'required|string',
-                'deskripsi_survey'=> 'required|string',
-                'thumbnail'=> 'required|string',
-                'status'=> 'required|string',
-                'responden_now'=> 'required|integer',
-                'coin_allocated'=> 'required|integer',
-                'coin_used'=> 'required|integer',
-                'jumlah_soal'=> 'required|integer',
-                'desainAttr'=> 'required|integer',
-                'kriteria'=> 'required|integer'
+                'icon' => 'required|string',
+                'type' => 'required|string',
             ]);
 
-            $survey = Survey::create($validated);
+            $soalType = SoalType::create($validated);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data Berhasil Dibuat',
-                'data' => $survey
+                'data' => $soalType
             ], 201);
 
         } catch (ValidationException $e) {
@@ -54,9 +45,9 @@ class SurveyController extends Controller
 
     public function show($id)
     {
-        $survey = Survey::find($id);
+        $soalType = SoalType::find($id);
 
-        if (!$survey) {
+        if (!$soalType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data Tidak Ditemukan'
@@ -65,15 +56,15 @@ class SurveyController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $survey
+            'data' => $soalType
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $survey = Survey::find($id);
+        $soalType = SoalType::find($id);
 
-        if (!$survey) {
+        if (!$soalType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data Tidak Ditemukan'
@@ -81,40 +72,31 @@ class SurveyController extends Controller
         }
 
         $validated = $request->validate([
-            'user_id'=> 'required|integer',
-            'judul_survey'=> 'required|string',
-            'deskripsi_survey'=> 'required|string',
-            'thumbnail'=> 'required|string',
-            'status'=> 'required|string',
-            'responden_now'=> 'required|integer',
-            'coin_allocated'=> 'required|integer',
-            'coin_used'=> 'required|integer',
-            'jumlah_soal'=> 'required|integer',
-            'desainAttr'=> 'required|integer',
-            'kriteria'=> 'required|integer'
+            'icon' => 'required|string',
+            'type' => 'required|string',
         ]);
 
-        $survey->update($validated);
+        $soalType->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Diperbarui',
-            'data' => $survey
+            'data' => $soalType
         ]);
     }
 
     public function destroy($id)
     {
-        $survey = Survey::find($id);
+        $soalType = SoalType::find($id);
 
-        if (!$survey) {
+        if (!$soalType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data Tidak Ditemukan'
             ], 404);
         }
 
-        $survey->delete();
+        $soalType->delete();
 
         return response()->json([
             'success' => true,

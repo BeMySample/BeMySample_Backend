@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('survey_respondens', function (Blueprint $table) {
+        Schema::create('kontribusi_explore', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_author');
+            $table->string('thumbnail')->nullable();
+            $table->string('judul');
+            $table->integer('coin')->default(0);
+            $table->foreignId('kriteria');
             $table->timestamps();
         });
     }
@@ -26,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('survey_respondens');
+        Schema::dropIfExists('kontribusi_explore');
     }
 };

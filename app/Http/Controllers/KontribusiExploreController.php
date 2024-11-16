@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Survey;
+use App\Models\KontribusiExplore;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-class SurveyController extends Controller
+class KontribusiExploreController extends Controller
 {
     public function index()
     {
-        $survey = Survey::all();
+        $kontribusiExplores = KontribusiExplore::all();
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dimuat',
-            'data' => $survey
+            'data' => $kontribusiExplores
         ]);
     }
 
@@ -23,25 +23,19 @@ class SurveyController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id'=> 'required|integer',
-                'judul_survey'=> 'required|string',
-                'deskripsi_survey'=> 'required|string',
-                'thumbnail'=> 'required|string',
-                'status'=> 'required|string',
-                'responden_now'=> 'required|integer',
-                'coin_allocated'=> 'required|integer',
-                'coin_used'=> 'required|integer',
-                'jumlah_soal'=> 'required|integer',
-                'desainAttr'=> 'required|integer',
-                'kriteria'=> 'required|integer'
+                'id_author' => 'required|integer',
+                'thumbnail' => 'required|string',
+                'judul' => 'required|string',
+                'coin' => 'required|integer',
+                'kriteria' => 'required|string',
             ]);
 
-            $survey = Survey::create($validated);
+            $kontribusiExplore = KontribusiExplore::create($validated);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data Berhasil Dibuat',
-                'data' => $survey
+                'data' => $kontribusiExplore
             ], 201);
 
         } catch (ValidationException $e) {
@@ -54,9 +48,9 @@ class SurveyController extends Controller
 
     public function show($id)
     {
-        $survey = Survey::find($id);
+        $kontribusiExplore = KontribusiExplore::find($id);
 
-        if (!$survey) {
+        if (!$kontribusiExplore) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data Tidak Ditemukan'
@@ -65,15 +59,15 @@ class SurveyController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $survey
+            'data' => $kontribusiExplore
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $survey = Survey::find($id);
+        $kontribusiExplore = KontribusiExplore::find($id);
 
-        if (!$survey) {
+        if (!$kontribusiExplore) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data Tidak Ditemukan'
@@ -81,40 +75,34 @@ class SurveyController extends Controller
         }
 
         $validated = $request->validate([
-            'user_id'=> 'required|integer',
-            'judul_survey'=> 'required|string',
-            'deskripsi_survey'=> 'required|string',
-            'thumbnail'=> 'required|string',
-            'status'=> 'required|string',
-            'responden_now'=> 'required|integer',
-            'coin_allocated'=> 'required|integer',
-            'coin_used'=> 'required|integer',
-            'jumlah_soal'=> 'required|integer',
-            'desainAttr'=> 'required|integer',
-            'kriteria'=> 'required|integer'
+            'id_author' => 'required|integer',
+            'thumbnail' => 'required|string',
+            'judul' => 'required|string',
+            'coin' => 'required|integer',
+            'kriteria' => 'required|string',
         ]);
 
-        $survey->update($validated);
+        $kontribusiExplore->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Diperbarui',
-            'data' => $survey
+            'data' => $kontribusiExplore
         ]);
     }
 
     public function destroy($id)
     {
-        $survey = Survey::find($id);
+        $kontribusiExplore = KontribusiExplore::find($id);
 
-        if (!$survey) {
+        if (!$kontribusiExplore) {
             return response()->json([
                 'success' => false,
                 'message' => 'Data Tidak Ditemukan'
             ], 404);
         }
 
-        $survey->delete();
+        $kontribusiExplore->delete();
 
         return response()->json([
             'success' => true,

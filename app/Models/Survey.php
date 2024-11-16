@@ -4,20 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class Survey extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
+
+    protected $table = 'survey';
 
     protected $fillable = [
-        'judul', 'deskripsi', 'kategori'
+        'user_id',
+        'judul_survey',
+        'deskripsi_survey',
+        'thumbnail',
+        'status',
+        'responden_now',
+        'coin_allocated',
+        'coin_used',
+        'jumlah_soal',
+        'desainAttr',
+        'kriteria',
     ];
-
-    public function peneliti() {
-        return $this->belongsTo(User::class, 'id_peneliti');
-    }
-
-    // public function surveyRespondens() {
-    //     return $this->hasMany(SurveyResponden::class, 'id_survey');
-    // }
 }
