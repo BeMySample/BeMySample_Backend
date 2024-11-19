@@ -16,6 +16,8 @@ class User extends Authenticatable
         'username',
         'nama_lengkap',
         'email',
+        'google_id',
+        'avatar',
         'password',
         'tanggal_lahir',
         'jenis_kelamin',

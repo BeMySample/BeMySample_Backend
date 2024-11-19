@@ -20,6 +20,8 @@ class UserSeeder extends Seeder
             'username' => 'john_doe',
             'nama_lengkap' => 'John Doe',
             'email' => 'john@example.com',
+            'google_id' => 'lorem123tes',
+            'avatar' => 'profile.png',
             'password' => Hash::make('password123'),  // Use Hash::make() for password
             'tanggal_lahir' => '1990-01-01',
             'jenis_kelamin' => 'laki-laki',
