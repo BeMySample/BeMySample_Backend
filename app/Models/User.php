@@ -17,7 +17,16 @@ class User extends Authenticatable
         'google_id',
         'avatar',
         'password',
+        'tanggal_lahir',
+        'jenis_kelamin',
+        'umur',
+        'lokasi',
+        'minat',
+        'institusi',
+        'poin_saya',
+        'pekerjaan',
+        'profilepic'
     ];
 
-    protected $table = 'users'; // Default Laravel
+    protected $table = 'user'; // Default Laravel
 }

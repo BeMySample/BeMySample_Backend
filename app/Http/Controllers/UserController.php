@@ -12,11 +12,11 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::select('username', 'nama_lengkap')->get();
+        $user = User::select('username', 'nama_lengkap')->get();
         return response()->json([
             'success' => true,
             'message' => 'Data Berhasil Dimuat',
-            'data' => $users
+            'data' => $user
         ]);
     }
 
