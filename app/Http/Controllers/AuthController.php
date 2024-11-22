@@ -43,7 +43,8 @@ class AuthController extends Controller
     }
 
     // Callback setelah login Google berhasil
-    public function handleGoogleCallback()
+    // Callback setelah login Google berhasil
+public function handleGoogleCallback()
 {
     try {
         $googleUser = \Laravel\Socialite\Facades\Socialite::driver('google')->stateless()->user();
@@ -52,6 +53,7 @@ class AuthController extends Controller
             ['email' => $googleUser->getEmail()],
             [
                 'username' => $googleUser->getEmail(),
+                'password' => \Illuminate\Support\Facades\Hash::make($googleUser->getId()),
                 'nama_lengkap' => $googleUser->getName() ?? 'Anonymous',
                 'google_id' => $googleUser->getId(),
                 'avatar' => $googleUser->getAvatar(),
@@ -61,14 +63,13 @@ class AuthController extends Controller
         \Illuminate\Support\Facades\Auth::login($user);
 
         $token = $user->createToken('auth_token')->plainTextToken;
-
-        // Redirect to frontend React with user data in query string
-        return redirect("http://localhost:3000/dashboard?token=$token&name=" . urlencode($user->nama_lengkap) . "&avatar=" . urlencode($user->avatar));
+    return redirect("http://localhost:3000/dashboard?token=$token&name=" . urlencode($user->nama_lengkap) . "&avatar=" . urlencode($user->avatar));
     } catch (\Exception $e) {
         \Log::error('Google Login Error: ' . $e->getMessage());
         return redirect('http://localhost:3000/login?error=login_failed');
     }
 }
+
 
 
 }

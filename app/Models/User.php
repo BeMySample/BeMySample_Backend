@@ -19,5 +19,5 @@ class User extends Authenticatable
         'password',
     ];
 
-    protected $table = 'users'; // Default Laravel
+    protected $table = 'user';
 }
