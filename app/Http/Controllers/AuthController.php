@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-use Laravel\Socialite\Facades\Socialite; // Tambahkan ini untuk Socialite
+use Laravel\Socialite\Facades\Socialite; 
  
 class AuthController extends Controller
 {
@@ -26,8 +26,13 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'user' => [
+                'name' => $user->nama_lengkap, 
+                'avatar' => $user->avatar ?? 'https://default-avatar-url.com/avatar.png', 
+            ],
         ]);
     }
+
 
     public function logout(Request $request)
     {
@@ -36,14 +41,14 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully']);
     }
 
-    // Redirect ke halaman login Google
+    
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->redirect();
     }
 
-    // Callback setelah login Google berhasil
-    // Callback setelah login Google berhasil
+    
+    
 public function handleGoogleCallback()
 {
     try {
