@@ -52,8 +52,8 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Login successful',
             'user' => [
-                'name' => $user->nama_lengkap,
-                'avatar' => $user->avatar ?? 'https://default-avatar-url.com/avatar.png',
+                'nama_lengkap' => $user->nama_lengkap,
+                'avatar' => $user->avatar ?? 'https://www.pngplay.com/wp-content/uploads/12/User-Avatar-Profile-Transparent-Free-PNG-Clip-Art.png',
             ],
         ]);
     }
