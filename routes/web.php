@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,3 +37,13 @@ Route::get('/logout', function () {
     Auth::logout();
     return redirect('/'); // Redirect ke halaman utama setelah logout
 })->name('logout');
+
+Route::get('/send-test-email', function () {
+    $testEmail = 'rezkydwi55@gmail.com';
+    Mail::raw('This is a test email from Laravel.', function ($message) use ($testEmail) {
+        $message->to($testEmail)
+                ->subject('Test Email');
+    });
+
+    return 'Test email sent!';
+});

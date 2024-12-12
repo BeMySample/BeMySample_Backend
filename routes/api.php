@@ -10,6 +10,7 @@ use App\Http\Controllers\SoalTypeController;
 use App\Http\Controllers\SurveyKriteriaController;
 use App\Http\Controllers\SurveySoalController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 
@@ -48,6 +49,9 @@ Route::post('users/edit/{id}', [UserController::class, 'update']);
 Route::delete('users/delete/{id}', [UserController::class, 'destroy']);
 Route::post('/users/upload', [UserController::class, 'uploadImage']);
 Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'showCurrentUser']);
+
+Route::post('/send-reset-link', [AuthController::class, 'sendResetLink']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::get('jawaban-soal', [JawabanSoalController::class, 'index']);
 Route::post('jawaban-soal', [JawabanSoalController::class, 'store']);
@@ -89,4 +93,14 @@ Route::get('survey-soal', [SurveySoalController::class, 'index']);
 Route::post('survey-soal', [SurveySoalController::class, 'store']);
 Route::get('survey-soal/{id}', [SurveySoalController::class, 'show']);
 Route::post('survey-soal/edit/{id}', [SurveySoalController::class, 'update']); 
-Route::delete('survey-soal/delete/{id}', [SurveySoalController::class, 'destroy']);  
+Route::delete('survey-soal/delete/{id}', [SurveySoalController::class, 'destroy']); 
+
+// Route::get('/send-test-email', function () {
+//     $testEmail = 'rezkydwi55@gmail.com';
+//     Mail::raw('This is a test email from Laravel.', function ($message) use ($testEmail) {
+//         $message->to($testEmail)
+//                 ->subject('Test Email');
+//     });
+
+//     return 'Test email sent!';
+// });
