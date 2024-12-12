@@ -23,9 +23,11 @@ class UserController extends Controller
             'data' => $user
         ]);
     }
+
     public function store(Request $request)
     {
         try {
+                
             $validated = $request->validate([
                 'username' => 'required|unique:user,username',
                 'status' => 'required|string',
@@ -42,6 +44,7 @@ class UserController extends Controller
                 'institusi' => 'nullable|string',
                 'poin_saya' => 'nullable|integer',
                 'pekerjaan' => 'nullable|string',
+                'profilepic' => 'nullable|string',
             ]);
     
             $avatarPath = $request->file('avatar')
@@ -51,7 +54,7 @@ class UserController extends Controller
             $avatarUrl = $avatarPath 
                 ? $this->baseUrl . Storage::url($avatarPath) 
                 : $this->placeholder;
-    
+
             $user = User::create([
                 'username' => $validated['username'],
                 'nama_lengkap' => $validated['nama_lengkap'],
@@ -69,8 +72,9 @@ class UserController extends Controller
                 'poin_saya' => $validated['poin_saya'] ?? 0,
                 'pekerjaan' => $validated['pekerjaan'],
             ]);
-    
-            return response()->json($user, 201);
+
+            return response()->json($user, status: 201);
+
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -78,7 +82,12 @@ class UserController extends Controller
             ], 422);
         }
     }
-    
+
+    public function show($id)
+    {
+        $user = User::findOrFail($id);
+        return response()->json($user);
+    }
 
     public function uploadImage(Request $request)
     {
@@ -95,16 +104,15 @@ class UserController extends Controller
             'avatar_url' => $avatarUrl,
         ]);
     }
-
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
-            'username' => 'required|unique:user,username',
+            'username' => ['required', Rule::unique('user')->ignore($user->id)],
             'status' => 'required|string',
             'nama_lengkap' => 'required|string',
-            'email' => 'required|email|unique:user,email',
+            'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
             'google_id' => 'required|string',
             'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
             'password' => 'nullable|min:6',
@@ -127,41 +135,36 @@ class UserController extends Controller
             $validated['avatar'] = $this->baseUrl . Storage::url($avatarPath);
         }
 
-        $user->update(array_filter($validated));
-        return response()->json($user);
-    }
-
-    public function show($id)
-    {
-        $user = User::findOrFail($id);
+        $user->update(array_filter($validated)); 
         return response()->json($user);
     }
 
     public function showCurrentUser(Request $request)
-{
-    $user = $request->user();
-    if (!$user) {
-        \Log::info('User not authenticated.');
-        return response()->json(['message' => 'User not authenticated'], 401);
-    }
-
-    \Log::info('Authenticated user:', ['user' => $user->toArray()]);
-    return response()->json([
-        'success' => true,
-        'data' => $user
-    ]);
-}
-    public function destroy($id)
     {
-        $user = User::findOrFail($id);
-
-        if ($user->avatar) {
-            $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
-            Storage::disk('public')->delete($currentAvatarPath);
+        $user = $request->user();
+        if (!$user) {
+            \Log::info('User not authenticated.');
+            return response()->json(['message' => 'User not authenticated'], 401);
         }
 
-        $user->delete();
-
-        return response()->json(['message' => 'User deleted successfully']);
+        \Log::info('Authenticated user:', ['user' => $user->toArray()]);
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ]);
     }
+
+public function destroy($id)
+{
+    $user = User::findOrFail($id);
+
+    if ($user->avatar) {
+        $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
+        Storage::disk('public')->delete($currentAvatarPath);
+    }
+
+    $user->delete();
+
+    return response()->json(['message' => 'User deleted successfully']);
+}
 }
