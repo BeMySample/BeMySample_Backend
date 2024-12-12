@@ -31,7 +31,8 @@ class UserController extends Controller
                 'nama_lengkap' => 'required|string',
                 'email' => 'required|email|unique:user,email',
                 'google_id' => 'required|string',
-                'avatar' => 'nullable|string',
+                // 'avatar' => 'nullable|string',
+                'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'password' => 'required|min:6',
                 'tanggal_lahir' => 'nullable|date',
                 'jenis_kelamin' => 'nullable|in:laki-laki,perempuan',
@@ -55,7 +56,7 @@ class UserController extends Controller
                 'email' => $validated['email'],
                 'google_id' => $validated['google_id'],
                 // 'avatar' => $validated['avatar'],
-                'profilepic' => $avatarPath ? Storage::url($avatarPath) : null,
+                'avatar' => $avatarPath ? Storage::url($avatarPath) : null,
                 'password' => Hash::make($validated['password']),
                 'tanggal_lahir' => $validated['tanggal_lahir'],
                 'jenis_kelamin' => $validated['jenis_kelamin'],
@@ -93,6 +94,23 @@ class UserController extends Controller
             ], 422);
         }
     }
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $avatarPath = $request->file('avatar')->store('avatar', 'public');
+        $avatarUrl = Storage::url($avatarPath);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image uploaded successfully',
+            'avatar_url' => $avatarUrl,
+        ]);
+    }
+
 
     public function show($id)
     {
