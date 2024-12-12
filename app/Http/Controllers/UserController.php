@@ -24,10 +24,19 @@ class UserController extends Controller
         ]);
     }
 
+    private function handleAvatarUpload($avatarFile = null)
+    {
+        if ($avatarFile) {
+            $avatarPath = $avatarFile->store('avatar', 'public');
+            return $this->baseUrl . Storage::url($avatarPath);
+        }
+
+        return $this->placeholder;
+    }
+
     public function store(Request $request)
     {
         try {
-                
             $validated = $request->validate([
                 'username' => 'required|unique:user,username',
                 'status' => 'required|string',
@@ -46,14 +55,8 @@ class UserController extends Controller
                 'pekerjaan' => 'nullable|string',
                 'profilepic' => 'nullable|string',
             ]);
-    
-            $avatarPath = $request->file('avatar')
-                ? $request->file('avatar')->store('avatar', 'public')
-                : null;
-    
-            $avatarUrl = $avatarPath 
-                ? $this->baseUrl . Storage::url($avatarPath) 
-                : $this->placeholder;
+
+            $avatarUrl = $this->handleAvatarUpload($request->file('avatar'));
 
             $user = User::create([
                 'username' => $validated['username'],
@@ -95,8 +98,7 @@ class UserController extends Controller
             'avatar' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $avatarPath = $request->file('avatar')->store('avatar', 'public');
-        $avatarUrl = $this->baseUrl . Storage::url($avatarPath);
+        $avatarUrl = $this->handleAvatarUpload($request->file('avatar'));
 
         return response()->json([
             'success' => true,
@@ -104,40 +106,80 @@ class UserController extends Controller
             'avatar_url' => $avatarUrl,
         ]);
     }
+
+    // public function update(Request $request, $id)
+    // {
+    //     $user = User::findOrFail($id);
+
+    //     $validated = $request->validate([
+    //         'username' => ['required', Rule::unique('user')->ignore($user->id)],
+    //         'status' => 'required|string',
+    //         'nama_lengkap' => 'required|string',
+    //         'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
+    //         'google_id' => 'required|string',
+    //         'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+    //         'password' => 'nullable|min:6',
+    //         'tanggal_lahir' => 'nullable|date',
+    //         'jenis_kelamin' => 'nullable|in:laki-laki,perempuan',
+    //         'umur' => 'nullable|integer',
+    //         'lokasi' => 'nullable|string',
+    //         'minat' => 'nullable|string',
+    //         'institusi' => 'nullable|string',
+    //         'poin_saya' => 'nullable|integer',
+    //         'pekerjaan' => 'nullable|string',
+    //     ]);
+
+    //     if ($request->hasFile('avatar')) {
+    //         if ($user->avatar) {
+    //             $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
+    //             Storage::disk('public')->delete($currentAvatarPath);
+    //         }
+    //         $validated['avatar'] = $this->handleAvatarUpload($request->file('avatar'));
+    //     }
+
+    //     $user->update(array_filter($validated));
+    //     return response()->json($user);
+    // }
+
+    
     public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
+{
+    $user = User::findOrFail($id);
 
-        $validated = $request->validate([
-            'username' => ['required', Rule::unique('user')->ignore($user->id)],
-            'status' => 'required|string',
-            'nama_lengkap' => 'required|string',
-            'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
-            'google_id' => 'required|string',
-            'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-            'password' => 'nullable|min:6',
-            'tanggal_lahir' => 'nullable|date',
-            'jenis_kelamin' => 'nullable|in:laki-laki,perempuan',
-            'umur' => 'nullable|integer',
-            'lokasi' => 'nullable|string',
-            'minat' => 'nullable|string',
-            'institusi' => 'nullable|string',
-            'poin_saya' => 'nullable|integer',
-            'pekerjaan' => 'nullable|string',
-        ]);
+    $validated = $request->validate([
+        'username' => ['required', Rule::unique('user')->ignore($user->id)],
+        'status' => 'required|string',
+        'nama_lengkap' => 'required|string',
+        'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
+        'google_id' => 'required|string',
+        'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
+        'password' => 'nullable|min:6',
+        'tanggal_lahir' => 'nullable|date',
+        'jenis_kelamin' => 'nullable|in:laki-laki,perempuan',
+        'umur' => 'nullable|integer',
+        'lokasi' => 'nullable|string',
+        'minat' => 'nullable|string',
+        'institusi' => 'nullable|string',
+        'poin_saya' => 'nullable|integer',
+        'pekerjaan' => 'nullable|string',
+    ]);
 
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
-                Storage::disk('public')->delete($currentAvatarPath);
-            }
-            $avatarPath = $request->file('avatar')->store('avatar', 'public');
-            $validated['avatar'] = $this->baseUrl . Storage::url($avatarPath);
+    if ($request->hasFile('avatar')) {
+        if ($user->avatar && $user->avatar != $this->placeholder) {
+            $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
+            Storage::disk('public')->delete($currentAvatarPath);
         }
 
-        $user->update(array_filter($validated)); 
-        return response()->json($user);
+        $avatarPath = $request->file('avatar')->store('avatar', 'public');
+        $validated['avatar'] = $this->baseUrl . Storage::url($avatarPath);
+    } else {
+        $validated['avatar'] = $user->avatar ?? $this->placeholder;
     }
+
+    $user->update(array_filter($validated));
+
+    return response()->json($user);
+}
 
     public function showCurrentUser(Request $request)
     {
@@ -154,17 +196,17 @@ class UserController extends Controller
         ]);
     }
 
-public function destroy($id)
-{
-    $user = User::findOrFail($id);
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
 
-    if ($user->avatar) {
-        $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
-        Storage::disk('public')->delete($currentAvatarPath);
+        if ($user->avatar) {
+            $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
+            Storage::disk('public')->delete($currentAvatarPath);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'User deleted successfully']);
     }
-
-    $user->delete();
-
-    return response()->json(['message' => 'User deleted successfully']);
-}
 }
