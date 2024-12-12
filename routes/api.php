@@ -46,11 +46,8 @@ Route::post('users', [UserController::class, 'store']);
 Route::get('users/{id}', [UserController::class, 'show']);
 Route::post('users/edit/{id}', [UserController::class, 'update']);
 Route::delete('users/delete/{id}', [UserController::class, 'destroy']);
-<<<<<<< HEAD
 Route::post('/users/upload', [UserController::class, 'uploadImage']);
-=======
 Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'showCurrentUser']);
->>>>>>> 988b41ef02ba4ce34665cca692f639e08b813c6e
 
 Route::get('jawaban-soal', [JawabanSoalController::class, 'index']);
 Route::post('jawaban-soal', [JawabanSoalController::class, 'store']);
