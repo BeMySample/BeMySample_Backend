@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -40,8 +41,12 @@ class UserController extends Controller
                 'institusi' => 'nullable|string',
                 'poin_saya' => 'nullable|integer',
                 'pekerjaan' => 'nullable|string',
-                'profilepic' => 'nullable|string',
+                // 'profilepic' => 'nullable|string',
             ]);
+
+            $avatarPath = $request->file('avatar')
+                ? $request->file('avatar')->store('avatar', 'public')
+                : null;
 
             $user = User::create([
                 'username' => $validated['username'],
@@ -49,7 +54,8 @@ class UserController extends Controller
                 'status' => $validated['status'],
                 'email' => $validated['email'],
                 'google_id' => $validated['google_id'],
-                'avatar' => $validated['avatar'],
+                // 'avatar' => $validated['avatar'],
+                'profilepic' => $avatarPath ? Storage::url($avatarPath) : null,
                 'password' => Hash::make($validated['password']),
                 'tanggal_lahir' => $validated['tanggal_lahir'],
                 'jenis_kelamin' => $validated['jenis_kelamin'],
@@ -59,7 +65,7 @@ class UserController extends Controller
                 'institusi' => $validated['institusi'],
                 'poin_saya' => $validated['poin_saya'] ?? 0,
                 'pekerjaan' => $validated['pekerjaan'],
-                'profilepic' => $validated['profilepic'],
+                // 'profilepic' => $validated['profilepic'],
             ]);
 
             // if ($user) {
@@ -104,7 +110,7 @@ class UserController extends Controller
             'nama_lengkap' => 'required|string',
             'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
             'google_id' => 'required|string',
-            'avatar' => 'required|string',
+            'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
             'password' => 'nullable|min:6',
             'tanggal_lahir' => 'nullable|date',
             'jenis_kelamin' => 'nullable|in:laki-laki,perempuan',
@@ -114,8 +120,16 @@ class UserController extends Controller
             'institusi' => 'nullable|string',
             'poin_saya' => 'nullable|integer',
             'pekerjaan' => 'nullable|string',
-            'profilepic' => 'nullable|string',
+            // 'profilepic' => 'nullable|string',
         ]);
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $user->avatar));
+            }
+            $avatarPath = $request->file('avatar')->store('avatar', 'public');
+            $validated['avatar'] = Storage::url($avatarPath);
+        }
 
         $user->update(array_filter($validated)); 
         return response()->json($user);

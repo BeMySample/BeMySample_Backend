@@ -25,8 +25,8 @@ class User extends Authenticatable
         'minat',
         'institusi',
         'poin_saya',
-        'pekerjaan',
-        'profilepic'
+        'pekerjaan'
+        // 'profilepic'
     ];
 
     protected $table = 'user';

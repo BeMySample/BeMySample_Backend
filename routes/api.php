@@ -44,6 +44,7 @@ Route::post('users', [UserController::class, 'store']);
 Route::get('users/{id}', [UserController::class, 'show']);
 Route::post('users/edit/{id}', [UserController::class, 'update']);
 Route::delete('users/delete/{id}', [UserController::class, 'destroy']);
+Route::post('/users/upload', [UserController::class, 'uploadImage']);
 
 Route::get('jawaban-soal', [JawabanSoalController::class, 'index']);
 Route::post('jawaban-soal', [JawabanSoalController::class, 'store']);
