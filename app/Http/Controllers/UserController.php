@@ -11,8 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    private $baseUrl = "http://localhost:3000/";
-    public $placeholder = "";
+    private $baseUrl = "http://localhost:8000/";
+    public $placeholder = "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png";
 
     public function index()
     {
@@ -130,13 +130,11 @@ class UserController extends Controller
         $user->update(array_filter($validated));
         return response()->json($user);
     }
+    
     public function show($id)
     {
         $user = User::findOrFail($id);
-        return response()->json([
-            'success' => true,
-            'data' => $user
-        ]);
+        return response()->json($user);
     }
 
     public function destroy($id)
