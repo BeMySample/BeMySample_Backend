@@ -12,7 +12,6 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     private $baseUrl = "http://localhost:3000/";
-    private $placeholder = "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png";
 
     public function index()
     {
@@ -28,10 +27,10 @@ class UserController extends Controller
     {
         try {
             $validated = $request->validate([
-                'username' => 'required|unique:user,username',
+                'username' => 'required|unique:users,username',
                 'status' => 'required|string',
                 'nama_lengkap' => 'required|string',
-                'email' => 'required|email|unique:user,email',
+                'email' => 'required|email|unique:users,email',
                 'google_id' => 'required|string',
                 'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'password' => 'required|min:6',
@@ -44,16 +43,13 @@ class UserController extends Controller
                 'poin_saya' => 'nullable|integer',
                 'pekerjaan' => 'nullable|string',
             ]);
-    
+
             $avatarPath = $request->file('avatar')
                 ? $request->file('avatar')->store('avatar', 'public')
                 : null;
-    
-            $avatarUrl = $avatarPath 
-                ? $this->baseUrl . Storage::url($avatarPath) 
-                : $this->placeholder;
-    
-            // Create user
+
+            $avatarUrl = $avatarPath ? $this->baseUrl . Storage::url($avatarPath) : null;
+
             $user = User::create([
                 'username' => $validated['username'],
                 'nama_lengkap' => $validated['nama_lengkap'],
@@ -71,7 +67,7 @@ class UserController extends Controller
                 'poin_saya' => $validated['poin_saya'] ?? 0,
                 'pekerjaan' => $validated['pekerjaan'],
             ]);
-    
+
             return response()->json($user, 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -80,7 +76,6 @@ class UserController extends Controller
             ], 422);
         }
     }
-    
 
     public function uploadImage(Request $request)
     {
@@ -131,6 +126,14 @@ class UserController extends Controller
 
         $user->update(array_filter($validated));
         return response()->json($user);
+    }
+    public function show($id)
+    {
+        $user = User::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ]);
     }
 
     public function destroy($id)
