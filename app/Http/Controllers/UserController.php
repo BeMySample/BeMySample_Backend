@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     private $baseUrl = "http://localhost:3000/";
+    private $placeholder = "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png";
 
     public function index()
     {
@@ -43,13 +44,16 @@ class UserController extends Controller
                 'poin_saya' => 'nullable|integer',
                 'pekerjaan' => 'nullable|string',
             ]);
-
+    
             $avatarPath = $request->file('avatar')
                 ? $request->file('avatar')->store('avatar', 'public')
                 : null;
-
-            $avatarUrl = $avatarPath ? $this->baseUrl . Storage::url($avatarPath) : null;
-
+    
+            $avatarUrl = $avatarPath 
+                ? $this->baseUrl . Storage::url($avatarPath) 
+                : $this->placeholder;
+    
+            // Create user
             $user = User::create([
                 'username' => $validated['username'],
                 'nama_lengkap' => $validated['nama_lengkap'],
@@ -67,7 +71,7 @@ class UserController extends Controller
                 'poin_saya' => $validated['poin_saya'] ?? 0,
                 'pekerjaan' => $validated['pekerjaan'],
             ]);
-
+    
             return response()->json($user, 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -76,6 +80,7 @@ class UserController extends Controller
             ], 422);
         }
     }
+    
 
     public function uploadImage(Request $request)
     {
