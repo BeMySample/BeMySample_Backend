@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     private $baseUrl = "http://localhost:3000/";
+    public $placeholder = "";
 
     public function index()
     {
@@ -22,15 +23,14 @@ class UserController extends Controller
             'data' => $user
         ]);
     }
-
     public function store(Request $request)
     {
         try {
             $validated = $request->validate([
-                'username' => 'required|unique:users,username',
+                'username' => 'required|unique:user,username',
                 'status' => 'required|string',
                 'nama_lengkap' => 'required|string',
-                'email' => 'required|email|unique:users,email',
+                'email' => 'required|email|unique:user,email',
                 'google_id' => 'required|string',
                 'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'password' => 'required|min:6',
@@ -43,13 +43,15 @@ class UserController extends Controller
                 'poin_saya' => 'nullable|integer',
                 'pekerjaan' => 'nullable|string',
             ]);
-
+    
             $avatarPath = $request->file('avatar')
                 ? $request->file('avatar')->store('avatar', 'public')
                 : null;
-
-            $avatarUrl = $avatarPath ? $this->baseUrl . Storage::url($avatarPath) : null;
-
+    
+            $avatarUrl = $avatarPath 
+                ? $this->baseUrl . Storage::url($avatarPath) 
+                : $this->placeholder;
+    
             $user = User::create([
                 'username' => $validated['username'],
                 'nama_lengkap' => $validated['nama_lengkap'],
@@ -67,7 +69,7 @@ class UserController extends Controller
                 'poin_saya' => $validated['poin_saya'] ?? 0,
                 'pekerjaan' => $validated['pekerjaan'],
             ]);
-
+    
             return response()->json($user, 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -76,6 +78,7 @@ class UserController extends Controller
             ], 422);
         }
     }
+    
 
     public function uploadImage(Request $request)
     {
