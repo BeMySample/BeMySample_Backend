@@ -130,13 +130,27 @@ class UserController extends Controller
         $user->update(array_filter($validated));
         return response()->json($user);
     }
-    
+
     public function show($id)
     {
         $user = User::findOrFail($id);
         return response()->json($user);
     }
 
+    public function showCurrentUser(Request $request)
+{
+    $user = $request->user();
+    if (!$user) {
+        \Log::info('User not authenticated.');
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    \Log::info('Authenticated user:', ['user' => $user->toArray()]);
+    return response()->json([
+        'success' => true,
+        'data' => $user
+    ]);
+}
     public function destroy($id)
     {
         $user = User::findOrFail($id);
