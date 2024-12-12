@@ -31,7 +31,7 @@ class UserController extends Controller
                 'nama_lengkap' => 'required|string',
                 'email' => 'required|email|unique:user,email',
                 'google_id' => 'required|string',
-                'avatar' => 'required|string',
+                'avatar' => 'nullable|string',
                 'password' => 'required|min:6',
                 'tanggal_lahir' => 'nullable|date',
                 'jenis_kelamin' => 'nullable|in:laki-laki,perempuan',
@@ -84,7 +84,7 @@ class UserController extends Controller
 
             // }
 
-            return response()->json($user, status: 201);
+            return response()->json($user, status: 201, );
 
         } catch (ValidationException $e) {
             return response()->json([
@@ -99,6 +99,22 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         return response()->json($user);
     }
+
+    public function showCurrentUser(Request $request)
+{
+    $user = $request->user();
+    if (!$user) {
+        \Log::info('User not authenticated.');
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    \Log::info('Authenticated user:', ['user' => $user->toArray()]);
+    return response()->json([
+        'success' => true,
+        'data' => $user
+    ]);
+}
+
 
     public function update(Request $request, $id)
     {

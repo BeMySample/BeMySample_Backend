@@ -36,15 +36,21 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::post('/login', [AuthController::class, 'login'])->middleware('web');
-Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:sanctum']);
+// Route::post('/login', [AuthController::class, 'login'])->middleware('web');
+// Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:sanctum']);
+Route::middleware('web')->post('/login', [AuthController::class, 'login']);
+Route::middleware('web')->post('/logout', [AuthController::class, 'logout']);
 
 Route::get('users', [UserController::class, 'index']);
 Route::post('users', [UserController::class, 'store']);
 Route::get('users/{id}', [UserController::class, 'show']);
 Route::post('users/edit/{id}', [UserController::class, 'update']);
 Route::delete('users/delete/{id}', [UserController::class, 'destroy']);
+<<<<<<< HEAD
 Route::post('/users/upload', [UserController::class, 'uploadImage']);
+=======
+Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'showCurrentUser']);
+>>>>>>> 988b41ef02ba4ce34665cca692f639e08b813c6e
 
 Route::get('jawaban-soal', [JawabanSoalController::class, 'index']);
 Route::post('jawaban-soal', [JawabanSoalController::class, 'store']);
