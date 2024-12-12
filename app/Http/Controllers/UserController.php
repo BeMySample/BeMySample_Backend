@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
+    private $baseUrl = "http://localhost:3000/";
+
     public function index()
     {
         $user = User::select('username', 'nama_lengkap')->get();
@@ -24,14 +26,12 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try {
-                
             $validated = $request->validate([
                 'username' => 'required|unique:user,username',
                 'status' => 'required|string',
                 'nama_lengkap' => 'required|string',
                 'email' => 'required|email|unique:user,email',
                 'google_id' => 'required|string',
-                // 'avatar' => 'nullable|string',
                 'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
                 'password' => 'required|min:6',
                 'tanggal_lahir' => 'nullable|date',
@@ -42,12 +42,13 @@ class UserController extends Controller
                 'institusi' => 'nullable|string',
                 'poin_saya' => 'nullable|integer',
                 'pekerjaan' => 'nullable|string',
-                // 'profilepic' => 'nullable|string',
             ]);
 
             $avatarPath = $request->file('avatar')
                 ? $request->file('avatar')->store('avatar', 'public')
                 : null;
+
+            $avatarUrl = $avatarPath ? $this->baseUrl . Storage::url($avatarPath) : null;
 
             $user = User::create([
                 'username' => $validated['username'],
@@ -55,8 +56,7 @@ class UserController extends Controller
                 'status' => $validated['status'],
                 'email' => $validated['email'],
                 'google_id' => $validated['google_id'],
-                // 'avatar' => $validated['avatar'],
-                'avatar' => $avatarPath ? Storage::url($avatarPath) : null,
+                'avatar' => $avatarUrl,
                 'password' => Hash::make($validated['password']),
                 'tanggal_lahir' => $validated['tanggal_lahir'],
                 'jenis_kelamin' => $validated['jenis_kelamin'],
@@ -66,27 +66,9 @@ class UserController extends Controller
                 'institusi' => $validated['institusi'],
                 'poin_saya' => $validated['poin_saya'] ?? 0,
                 'pekerjaan' => $validated['pekerjaan'],
-                // 'profilepic' => $validated['profilepic'],
             ]);
 
-            // if ($user) {
-
-            //     return response()->json([
-            //         'success' => true,
-            //         'message' => 'Data Berhasil Dibuat'
-            //     ], 201);
-
-            // } else {
-                
-            //     return response()->json([
-            //         'success' => true,
-            //         'message' => 'Data Gagal Dibuat'
-            //     ], 400);
-
-            // }
-
-            return response()->json($user, status: 201, );
-
+            return response()->json($user, 201);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -102,7 +84,7 @@ class UserController extends Controller
         ]);
 
         $avatarPath = $request->file('avatar')->store('avatar', 'public');
-        $avatarUrl = Storage::url($avatarPath);
+        $avatarUrl = $this->baseUrl . Storage::url($avatarPath);
 
         return response()->json([
             'success' => true,
@@ -111,38 +93,15 @@ class UserController extends Controller
         ]);
     }
 
-
-    public function show($id)
-    {
-        $user = User::findOrFail($id);
-        return response()->json($user);
-    }
-
-    public function showCurrentUser(Request $request)
-{
-    $user = $request->user();
-    if (!$user) {
-        \Log::info('User not authenticated.');
-        return response()->json(['message' => 'User not authenticated'], 401);
-    }
-
-    \Log::info('Authenticated user:', ['user' => $user->toArray()]);
-    return response()->json([
-        'success' => true,
-        'data' => $user
-    ]);
-}
-
-
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
         $validated = $request->validate([
-            'username' => ['required', Rule::unique('user')->ignore($user->id)],
+            'username' => 'required|unique:user,username',
             'status' => 'required|string',
             'nama_lengkap' => 'required|string',
-            'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
+            'email' => 'required|email|unique:user,email',
             'google_id' => 'required|string',
             'avatar' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
             'password' => 'nullable|min:6',
@@ -154,24 +113,30 @@ class UserController extends Controller
             'institusi' => 'nullable|string',
             'poin_saya' => 'nullable|integer',
             'pekerjaan' => 'nullable|string',
-            // 'profilepic' => 'nullable|string',
         ]);
 
         if ($request->hasFile('avatar')) {
             if ($user->avatar) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', $user->avatar));
+                $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
+                Storage::disk('public')->delete($currentAvatarPath);
             }
             $avatarPath = $request->file('avatar')->store('avatar', 'public');
-            $validated['avatar'] = Storage::url($avatarPath);
+            $validated['avatar'] = $this->baseUrl . Storage::url($avatarPath);
         }
 
-        $user->update(array_filter($validated)); 
+        $user->update(array_filter($validated));
         return response()->json($user);
     }
 
     public function destroy($id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->avatar) {
+            $currentAvatarPath = str_replace($this->baseUrl . '/storage/', '', $user->avatar);
+            Storage::disk('public')->delete($currentAvatarPath);
+        }
+
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully']);
