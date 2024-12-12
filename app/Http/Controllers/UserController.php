@@ -24,11 +24,21 @@ class UserController extends Controller
         ]);
     }
 
+    // private function handleAvatarUpload($avatarFile = null)
+    // {
+    //     if ($avatarFile) {
+    //         $avatarPath = $avatarFile->store('avatar', 'public');
+    //         return $this->baseUrl . Storage::url($avatarPath);
+    //     }
+
+    //     return $this->placeholder;
+    // }
+
     private function handleAvatarUpload($avatarFile = null)
     {
         if ($avatarFile) {
             $avatarPath = $avatarFile->store('avatar', 'public');
-            return $this->baseUrl . Storage::url($avatarPath);
+            return Storage::url($avatarPath);
         }
 
         return $this->placeholder;
