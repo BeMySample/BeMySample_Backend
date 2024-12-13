@@ -38,6 +38,21 @@ Route::get('/logout', function () {
     return redirect('/'); // Redirect ke halaman utama setelah logout
 })->name('logout');
 
+
+Route::get('/password/reset/{token}', function ($token) {
+    return view('auth.password-reset', ['token' => $token]);
+})->name('password.reset');
+
+Route::get('/send-test-email', function () {
+    $testEmail = 'rezkydwi55@gmail.com';
+    Mail::raw('This is a test email from Laravel.', function ($message) use ($testEmail) {
+        $message->to($testEmail)
+                ->subject('Test Email');
+    });
+
+    return 'Test email sent!';
+});
+
 Route::get('/send-test-email', function () {
     $testEmail = 'rezkydwi55@gmail.com';
     Mail::raw('This is a test email from Laravel.', function ($message) use ($testEmail) {
