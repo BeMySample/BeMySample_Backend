@@ -99,6 +99,14 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && $user->google_id !== 'unknown') {
+            return response()->json([
+                'message' => 'Password reset is not allowed.',
+            ], 403);
+        }
+
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
@@ -107,6 +115,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Unable to send reset link. Please check the email address.'], 400);
         }
     }
+
+
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -114,7 +124,15 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required|min:8|confirmed',
         ]);
-
+    
+        $user = User::where('email', $request->email)->first();
+    
+        if ($user && $user->google_id !== 'unknown') {
+            return response()->json([
+                'message' => 'Password reset is not allowed.',
+            ], 403);
+        }
+    
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
@@ -123,11 +141,12 @@ class AuthController extends Controller
                 ])->save();
             }
         );
-
+    
         if ($status === Password::PASSWORD_RESET) {
             return response()->json(['message' => 'Password reset successfully.'], 200);
         } else {
             return response()->json(['message' => 'Invalid token or email.'], 400);
         }
     }
+    
 }
