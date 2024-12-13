@@ -24,13 +24,20 @@ class SurveyDesainController extends Controller
     {
         try {
             $validated = $request->validate([
-                'background_img' => 'required|string',
+                // 'background_img' => 'required|string',
+                'background_img' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
                 'opacity' => 'required|string',
                 'warna_latar' => 'required|string',
                 'warna_tombol' => 'required|string',
                 'warna_tombol_text' => 'required|string',
                 'warna_text' => 'required|string',
             ]);
+    
+            if ($request->hasFile('background_img')) {
+                $file = $request->file('background_img');
+                $path = $file->store('background', 'public');
+                $validated['background_img'] = $path; 
+            }
 
             $surveyDesain = SurveyDesain::create($validated);
 
@@ -63,7 +70,7 @@ class SurveyDesainController extends Controller
             $surveyDesain = SurveyDesain::findOrFail($id);
 
             $validated = $request->validate([
-                'background_img' => 'required|string',
+                'background_img' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
                 'opacity' => 'required|string',
                 'warna_latar' => 'required|string',
                 'warna_tombol' => 'required|string',

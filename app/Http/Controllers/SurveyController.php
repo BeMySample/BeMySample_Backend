@@ -23,27 +23,33 @@ class SurveyController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id'=> 'required|integer',
-                'judul_survey'=> 'required|string',
-                'deskripsi_survey'=> 'required|string',
-                'thumbnail'=> 'required|string',
-                'status'=> 'required|string',
-                'responden_now'=> 'required|integer',
-                'coin_allocated'=> 'required|integer',
-                'coin_used'=> 'required|integer',
-                'jumlah_soal'=> 'required|integer',
-                'desainAttr'=> 'required|integer',
-                'kriteria'=> 'required|integer'
+                'user_id' => 'required|integer',
+                'judul_survey' => 'required|string',
+                'deskripsi_survey' => 'required|string',
+                'thumbnail' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
+                'status' => 'required|string',
+                'responden_now' => 'required|integer',
+                'coin_allocated' => 'required|integer',
+                'coin_used' => 'required|integer',
+                'jumlah_soal' => 'required|integer',
+                'desainAttr' => 'required|integer',
+                'kriteria' => 'required|integer',
             ]);
-
+    
+            if ($request->hasFile('thumbnail')) {
+                $file = $request->file('thumbnail');
+                $path = $file->store('thumbnail', 'public');
+                $validated['thumbnail'] = $path; 
+            }
+    
             $survey = Survey::create($validated);
-
+    
             return response()->json([
                 'success' => true,
                 'message' => 'Data Berhasil Dibuat',
                 'data' => $survey
             ], 201);
-
+    
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -51,6 +57,7 @@ class SurveyController extends Controller
             ], 422);
         }
     }
+    
 
     public function show($id)
     {
@@ -84,7 +91,7 @@ class SurveyController extends Controller
             'user_id'=> 'required|integer',
             'judul_survey'=> 'required|string',
             'deskripsi_survey'=> 'required|string',
-            'thumbnail'=> 'required|string',
+            'thumbnail' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
             'status'=> 'required|string',
             'responden_now'=> 'required|integer',
             'coin_allocated'=> 'required|integer',

@@ -64,7 +64,6 @@ class UserController extends Controller
             'institusi' => 'nullable|string',
             'poin_saya' => 'nullable|integer',
             'pekerjaan' => 'nullable|string',
-            'profilepic' => 'nullable|string',
         ]);
 
         // Validasi khusus avatar (file atau URL)
