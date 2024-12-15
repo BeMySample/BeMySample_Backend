@@ -13,12 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        // Schema::table('user', function (Blueprint $table) {
-        //     $table->string('google_id')->nullable();
-        //     $table->string('avatar')->nullable();
-        // });
+        Schema::create('choices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('section_id')->constrained('sections')->onDelete('cascade');
+            $table->string('label');
+            $table->string('value');
+            $table->timestamps();
+        });
+        
     }
-
 
     /**
      * Reverse the migrations.
@@ -27,8 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('user', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('choices');
     }
 };

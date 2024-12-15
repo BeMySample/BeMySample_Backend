@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JawabanSoalController;
 use App\Http\Controllers\KontribusiExploreController;
 use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\SurveysController;
 use App\Http\Controllers\SurveyDesainController;
 use App\Http\Controllers\SoalTypeController;
 use App\Http\Controllers\SurveyKriteriaController;
@@ -12,7 +13,6 @@ use App\Http\Controllers\SurveySoalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +52,15 @@ Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'showCur
 
 Route::post('/send-reset-link', [AuthController::class, 'sendResetLink']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+#surveys table based on the new json
+Route::prefix('surveys')->group(function () {
+    Route::get('/', [SurveysController::class, 'index']);          // List or get semua survey new
+    Route::post('/', [SurveysController::class, 'store']);         // Create a new survey
+    Route::get('/{id}', [SurveysController::class, 'show']);       // Show a single survey
+    Route::put('/{id}', [SurveysController::class, 'update']);     // Edit or update a survey
+    Route::delete('/{id}', [SurveysController::class, 'destroy']); // Delete a survey
+});
 
 Route::get('jawaban-soal', [JawabanSoalController::class, 'index']);
 Route::post('jawaban-soal', [JawabanSoalController::class, 'store']);

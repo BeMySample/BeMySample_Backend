@@ -48,7 +48,6 @@ class UserController extends Controller
     public function store(Request $request)
 {
     try {
-        // Validasi dasar
         $validated = $request->validate([
             'username' => 'required|unique:user,username',
             'status' => 'required|string',
@@ -109,7 +108,6 @@ class UserController extends Controller
         ], 422);
     }
 }
-
 
     public function show($id)
     {
