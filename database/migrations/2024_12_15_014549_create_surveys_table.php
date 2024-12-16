@@ -15,13 +15,20 @@ return new class extends Migration
     {
         Schema::create('surveys', function (Blueprint $table) {
             $table->id();
-            $table->string('survey_title');
-            $table->string('active_section')->nullable();
-            $table->string('background_image')->nullable();
-            $table->string('bg_color', 7);
-            $table->boolean('created_by_ai')->default(false);
+            $table->integer('user_id');
+            $table->string('backgroundImage')->nullable();
+            $table->string('bgColor', 7);
+            $table->boolean('createdByAI')->default(false);
             $table->integer('respondents')->default(0);
+            $table->integer('maxRespondents')->nullable();
+            $table->integer('coinAllocated')->nullable();
+            $table->integer('coinUsed')->nullable();
+            $table->string('kriteria')->nullable();
             $table->enum('status', ['draft', 'published'])->default('draft');
+            $table->string('surveyTitle');
+            $table->string('surveyDescription');
+            $table->string('thumbnail');
+            // $table->string('updated');
             $table->timestamps();
         });
         

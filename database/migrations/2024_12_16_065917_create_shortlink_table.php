@@ -13,15 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('sections', function (Blueprint $table) {
+        Schema::create('shortlink', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('survey_id')->constrained()->onDelete('cascade');
-            $table->string('icon');
-            $table->string('section_id'); 
-            $table->string('label'); 
+            $table->string('oldLink');   
+            $table->string(column: 'neLink');   
             $table->timestamps();
         });
-        
     }
 
     /**
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sections');
+        Schema::dropIfExists('shortlink');
     }
 };
