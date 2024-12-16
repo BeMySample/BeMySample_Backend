@@ -131,6 +131,17 @@ class SurveysController extends Controller
     private function processSections($survey, $sections, $surveyId)
     {
         foreach ($sections as $sectionData) {
+            $listChoices = $sectionData['listChoices'] ?? null;
+    
+            if (is_array($listChoices) && isset($listChoices[0]) && is_string($listChoices[0])) {
+                $listChoices = array_map(function ($choice, $index) {
+                    return [
+                        'label' => $choice,
+                        'value' => chr(65 + $index),
+                    ];
+                }, $listChoices, array_keys($listChoices));
+            }
+
             $survey->sections()->updateOrCreate(
                 ['id' => $sectionData['id'] ?? null],
                 [
@@ -146,7 +157,8 @@ class SurveysController extends Controller
                     'dateFormat' => $sectionData['dateFormat'] ?? null,
                     'description' => $sectionData['description'] ?? null,
                     'largeLabel' => $sectionData['largeLabel'] ?? null,
-                    'listChoices' => json_encode($sectionData['listChoices']) ?? null,
+                    // 'listChoices' => json_encode($sectionData['listChoices']) ?? null,
+                    'listChoices' => $listChoices ? json_encode($listChoices) : null,
                     'maxChoices' => $sectionData['maxChoices'] ?? null,
                     'midLabel' => $sectionData['midLabel'] ?? null,
                     'minChoices' => $sectionData['minChoices'] ?? null,
