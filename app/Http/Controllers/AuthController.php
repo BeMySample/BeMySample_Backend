@@ -23,7 +23,7 @@ class AuthController extends Controller
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json(['message' => 'Invalid login details'], 401);
         }
-
+        
         $user = Auth::user();
 
         $loginMethod = $user->google_id === 'unknown' ? 'email' : 'google';

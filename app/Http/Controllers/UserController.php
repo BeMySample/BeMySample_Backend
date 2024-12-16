@@ -50,7 +50,6 @@ class UserController extends Controller
     try {
         $validated = $request->validate([
             'username' => 'required|unique:user,username',
-            'status' => 'required|string',
             'nama_lengkap' => 'required|string',
             'email' => 'required|email|unique:user,email',
             'google_id' => 'required|string',
@@ -84,7 +83,6 @@ class UserController extends Controller
         $user = User::create([
             'username' => $validated['username'],
             'nama_lengkap' => $validated['nama_lengkap'],
-            'status' => $validated['status'],
             'email' => $validated['email'],
             'google_id' => $validated['google_id'],
             'avatar' => $avatarUrl,
@@ -171,7 +169,6 @@ class UserController extends Controller
 
     $validated = $request->validate([
         'username' => ['required', Rule::unique('user')->ignore($user->id)],
-        'status' => 'required|string',
         'nama_lengkap' => 'required|string',
         'email' => ['required', 'email', Rule::unique('user')->ignore($user->id)],
         'google_id' => 'required|string',

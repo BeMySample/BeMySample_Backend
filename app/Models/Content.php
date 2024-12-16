@@ -34,8 +34,8 @@ class Content extends Model
         'toggleResponseCopy',
     ];
 
-    public function section()
-    {
-        return $this->belongsTo(Sections::class);
-    }
+    // public function section()
+    // {
+    //     return $this->belongsTo(Sections::class,'section_id');
+    // }
 }

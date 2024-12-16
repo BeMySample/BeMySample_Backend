@@ -54,7 +54,7 @@ Route::post('/send-reset-link', [AuthController::class, 'sendResetLink']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 #surveys table based on the new json
-Route::prefix('surveys')->group(function () {
+Route::prefix('surveys')->middleware('checkToken')->group(function () {
     Route::get('/', [SurveysController::class, 'index']);          // List or get semua survey new
     Route::post('/', [SurveysController::class, 'store']);         // Create a new survey
     Route::get('/{id}', [SurveysController::class, 'show']);       // Show a single survey

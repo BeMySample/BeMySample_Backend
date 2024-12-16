@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Surveys;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class SurveysController extends Controller
 {
     public function index()
     {
-        $surveys = Surveys::with('sections.content')->get();
+        $surveys = Surveys::with('sections')->get();
 
         return response()->json([
             'success' => true,
@@ -23,13 +22,13 @@ class SurveysController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'status' => 'required|in:draft,published',
             'surveyTitle' => 'required|string|max:255',
             'surveyDescription' => 'nullable|string|max:255',
-            // 'backgroundImage' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
-            // 'thumbnail' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
-            'sections' => 'required|array',
-            'sections.*.title' => 'required|string|max:255',
-            'sections.*.content' => 'nullable|array',
+            // 'backgroundImage' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
+            // 'thumbnail' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
+            'sections' => 'required|array|min:1',
+            'sections.*.label' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -40,53 +39,14 @@ class SurveysController extends Controller
             ], 422);
         }
 
-        $validated = [];
-
-        // image handler
-        // if ($request->hasFile('backgroundImage')) {
-        //     $backgroundImage = $request->file('backgroundImage');
-        //     $validated['backgroundImage'] = $backgroundImage->store('background', 'public');
-        // }
-
-        // if ($request->hasFile('thumbnail')) {
-        //     $thumbnail = $request->file('thumbnail');
-        //     $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
-        // }
-
-        //to make the thumbnail and bg image accept file and url string
-        $bgImgUrl = null;
-        if ($request->hasFile('backgroundImage')) {
-            $request->validate([
-                'backgroundImage' => 'file|mimes:jpeg,png,jpg,gif|max:10240',
-            ]);
-            $bgImgUrl = $this->handleAvatarUpload($request->file('backgroundImage'));
-        } elseif ($request->input('backgroundImage')) {
-            $request->validate([
-                'backgroundImage' => 'string|url',
-            ]);
-            $bgImgUrl = $request->input('backgroundImage');
-        }
-
-        $thumbnailUrl = null;
-        if ($request->hasFile('thumbnail')) {
-            $request->validate([
-                'thumbnail' => 'file|mimes:jpeg,png,jpg,gif|max:10240',
-            ]);
-            $thumbnailUrl = $this->handleAvatarUpload($request->file('thumbnail'));
-        } elseif ($request->input('thumbnail')) {
-            $request->validate([
-                'thumbnail' => 'string|url',
-            ]);
-            $thumbnailUrl = $request->input('thumbnail');
-        }
+        $bgImgUrl = $this->processImage($request, 'backgroundImage');
+        $thumbnailUrl = $this->processImage($request, 'thumbnail');
 
         $survey = Surveys::create([
-            'user_id' => auth()->id(),
+            'user_id' => $request->user_id,
             'surveyTitle' => $request->surveyTitle,
             'surveyDescription' => $request->surveyDescription,
-            // 'backgroundImage' => $validated['backgroundImage'],
             'backgroundImage' => $bgImgUrl,
-            // 'thumbnail' => $validated['thumbnail'],
             'thumbnail' => $thumbnailUrl,
             'bgColor' => $request->bgColor,
             'createdByAI' => $request->createdByAI,
@@ -98,45 +58,12 @@ class SurveysController extends Controller
             'status' => $request->status,
         ]);
 
-        foreach ($request->sections as $sectionData) {
-            $section = $survey->sections()->create([
-                'icon' => $sectionData['icon'] ?? null,
-                'label' => $sectionData['label'] ?? null,
-            ]);
-
-            if (isset($sectionData['content'])) {
-                foreach ($sectionData['content'] as $contentData) {
-                    $section->content()->create([
-                        'bgColor' => $contentData['bgColor'] ?? '#FFFFFF',
-                        'bgOpacity' => $contentData['bgOpacity'] ?? 1,
-                        'buttonColor' => $contentData['buttonColor'] ?? null,
-                        'buttonText' => $contentData['buttonText'] ?? null,
-                        'buttonTextColor' => $contentData['buttonTextColor'] ?? null,
-                        'contentText' => $contentData['contentText'] ?? null,
-                        'dateFormat' => $contentData['dateFormat'] ?? null,
-                        'description' => $contentData['description'] ?? null,
-                        'largeLabel' => $contentData['largeLabel'] ?? null,
-                        'listChoices' => $contentData['listChoices'] ?? null,
-                        'maxChoices' => $contentData['maxChoices'] ?? null,
-                        'midLabel' => $contentData['midLabel'] ?? null,
-                        'minChoices' => $contentData['minChoices'] ?? null,
-                        'mustBeFilled' => $contentData['mustBeFilled'] ?? false,
-                        'optionsCount' => $contentData['optionsCount'] ?? null,
-                        'otherOption' => $contentData['otherOption'] ?? false,
-                        'smallLabel' => $contentData['smallLabel'] ?? null,
-                        'textColor' => $contentData['textColor'] ?? null,
-                        'timeFormat' => $contentData['timeFormat'] ?? null,
-                        'title' => $contentData['title'] ?? null,
-                        'toggleResponseCopy' => $contentData['toggleResponseCopy'] ?? false,
-                    ]);
-                }
-            }
-        }
+        $this->processSections($survey, $request->sections, $survey->id);
 
         return response()->json([
             'success' => true,
-            'message' => 'Survey successfully created with sections and content',
-            'data' => $survey->load('sections.content')
+            'message' => 'Survey successfully created',
+            'data' => $survey
         ], 201);
     }
 
@@ -158,52 +85,19 @@ class SurveysController extends Controller
         $request->validate([
             'surveyTitle' => 'required|string|max:255',
             'surveyDescription' => 'nullable|string|max:255',
+            // 'backgroundImage' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
+            // 'thumbnail' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
             'sections' => 'nullable|array',
-            'sections.*.title' => 'nullable|string|max:255',
-            'sections.*.contentText' => 'nullable|string',
         ]);
-
-        $validated = [];
-        $bgImgUrl = $survey->backgroundImage; 
-        if ($request->hasFile('backgroundImage')) {
-            $backgroundImage = $request->file('backgroundImage');
-            $bgImgUrl = $this->handleAvatarUpload($backgroundImage);
-        } elseif ($request->input('backgroundImage')) {
-            $request->validate([
-                'backgroundImage' => 'string|url',
-            ]);
-            $bgImgUrl = $request->input('backgroundImage');
-        }
-
-        $thumbnailUrl = $survey->thumbnail; 
-        if ($request->hasFile('thumbnail')) {
-            $thumbnail = $request->file('thumbnail');
-            $thumbnailUrl = $this->handleAvatarUpload($thumbnail);
-        } elseif ($request->input('thumbnail')) {
-            $request->validate([
-                'thumbnail' => 'string|url',
-            ]);
-            $thumbnailUrl = $request->input('thumbnail');
-        }
-
-        // update image only
-        // if ($request->hasFile('backgroundImage')) {
-        //     $backgroundImage = $request->file('backgroundImage');
-        //     $validated['backgroundImage'] = $backgroundImage->store('background', 'public');
-        // }
-
-        // if ($request->hasFile('thumbnail')) {
-        //     $thumbnail = $request->file('thumbnail');
-        //     $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
-        // }
         
+        $bgImgUrl = $this->processImage($request, 'backgroundImage', $survey->backgroundImage);
+        $thumbnailUrl = $this->processImage($request, 'thumbnail', $survey->thumbnail);
+
         $survey->update([
             'surveyTitle' => $request->surveyTitle,
             'surveyDescription' => $request->surveyDescription,
             'backgroundImage' => $bgImgUrl,
             'thumbnail' => $thumbnailUrl,
-            // 'backgroundImage' => $validated['backgroundImage'] ?? $survey->backgroundImage,
-            // 'thumbnail' => $validated['thumbnail'] ?? $survey->thumbnail,
             'bgColor' => $request->bgColor,
             'createdByAI' => $request->createdByAI,
             'respondents' => $request->respondents,
@@ -214,63 +108,58 @@ class SurveysController extends Controller
             'status' => $request->status,
         ]);
 
-        // Update sections and content
         if ($request->has('sections')) {
-            foreach ($request->sections as $sectionData) {
-                $section = $survey->sections()->updateOrCreate([
-                    'id' => $sectionData['id'] ?? null
-                ], [
-                    'icon' => $sectionData['icon'] ?? null,
-                    'label' => $sectionData['label'] ?? null,
-                ]);
-
-                if (isset($sectionData['content'])) {
-                    foreach ($sectionData['content'] as $contentData) {
-                        $section->content()->updateOrCreate([
-                            'id' => $contentData['id'] ?? null
-                        ], [
-                            'bgColor' => $contentData['bgColor'] ?? '#FFFFFF',
-                            'bgOpacity' => $contentData['bgOpacity'] ?? 1,
-                            'buttonColor' => $contentData['buttonColor'] ?? null,
-                            'buttonText' => $contentData['buttonText'] ?? null,
-                            'buttonTextColor' => $contentData['buttonTextColor'] ?? null,
-                            'contentText' => $contentData['contentText'] ?? null,
-                            'dateFormat' => $contentData['dateFormat'] ?? null,
-                            'description' => $contentData['description'] ?? null,
-                            'largeLabel' => $contentData['largeLabel'] ?? null,
-                            'listChoices' => $contentData['listChoices'] ?? null,
-                            'maxChoices' => $contentData['maxChoices'] ?? null,
-                            'midLabel' => $contentData['midLabel'] ?? null,
-                            'minChoices' => $contentData['minChoices'] ?? null,
-                            'mustBeFilled' => $contentData['mustBeFilled'] ?? false,
-                            'optionsCount' => $contentData['optionsCount'] ?? null,
-                            'otherOption' => $contentData['otherOption'] ?? false,
-                            'smallLabel' => $contentData['smallLabel'] ?? null,
-                            'textColor' => $contentData['textColor'] ?? null,
-                            'timeFormat' => $contentData['timeFormat'] ?? null,
-                            'title' => $contentData['title'] ?? null,
-                            'toggleResponseCopy' => $contentData['toggleResponseCopy'] ?? false,
-                        ]);
-                    }
-                }
-            }
+            $this->processSections($survey, $request->sections, $survey->id);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Survey successfully updated',
-            'data' => $survey->load('sections.content')
+            'message' => 'Survey updated successfully',
+            'data' => $survey
         ], 200);
     }
 
-    public function destroy($id)
+    private function processImage(Request $request, $fieldName, $default = null)
     {
-        $survey = Surveys::findOrFail($id);
-        $survey->delete();
+        if ($request->hasFile($fieldName)) {
+            return $request->file($fieldName)->store('uploads', 'public');
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Survey deleted successfully',
-        ], 200);
+        return $request->input($fieldName) ?: $default;
+    }
+
+    private function processSections($survey, $sections, $surveyId)
+    {
+        foreach ($sections as $sectionData) {
+            $survey->sections()->updateOrCreate(
+                ['id' => $sectionData['id'] ?? null],
+                [
+                    'survey_id' => $surveyId,
+                    'icon' => $sectionData['icon'] ?? null,
+                    'label' => $sectionData['label'] ?? null,
+                    'bgColor' => $sectionData['bgColor'] ?? null,
+                    'bgOpacity' => $sectionData['bgOpacity'] ?? null,
+                    'buttonColor' => $sectionData['buttonColor'] ?? null,
+                    'buttonText' => $sectionData['buttonText'] ?? null,
+                    'buttonTextColor' => $sectionData['buttonTextColor'] ?? null,
+                    'contentText' => $sectionData['contentText'] ?? null,
+                    'dateFormat' => $sectionData['dateFormat'] ?? null,
+                    'description' => $sectionData['description'] ?? null,
+                    'largeLabel' => $sectionData['largeLabel'] ?? null,
+                    'listChoices' => json_encode($sectionData['listChoices']) ?? null,
+                    'maxChoices' => $sectionData['maxChoices'] ?? null,
+                    'midLabel' => $sectionData['midLabel'] ?? null,
+                    'minChoices' => $sectionData['minChoices'] ?? null,
+                    'mustBeFilled' => $sectionData['mustBeFilled'] ?? null,
+                    'optionsCount' => $sectionData['optionsCount'] ?? null,
+                    'otherOption' => $sectionData['otherOption'] ?? null,
+                    'smallLabel' => $sectionData['smallLabel'] ?? null,
+                    'textColor' => $sectionData['textColor'] ?? null,
+                    'timeFormat' => $sectionData['timeFormat'] ?? null,
+                    'title' => $sectionData['title'] ?? null,
+                    'toggleResponseCopy' => $sectionData['toggleResponseCopy'] ?? null,
+                ]
+            );
+        }
     }
 }
