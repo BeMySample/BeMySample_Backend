@@ -126,6 +126,7 @@ class SurveysController extends Controller
                         'smallLabel' => $contentData['smallLabel'] ?? null,
                         'textColor' => $contentData['textColor'] ?? null,
                         'timeFormat' => $contentData['timeFormat'] ?? null,
+                        'title' => $contentData['title'] ?? null,
                         'toggleResponseCopy' => $contentData['toggleResponseCopy'] ?? false,
                     ]);
                 }
@@ -163,8 +164,7 @@ class SurveysController extends Controller
         ]);
 
         $validated = [];
-        // Handle file or URL for backgroundImage
-        $bgImgUrl = $survey->backgroundImage;  // Keep existing image if no new file is uploaded
+        $bgImgUrl = $survey->backgroundImage; 
         if ($request->hasFile('backgroundImage')) {
             $backgroundImage = $request->file('backgroundImage');
             $bgImgUrl = $this->handleAvatarUpload($backgroundImage);
@@ -175,8 +175,7 @@ class SurveysController extends Controller
             $bgImgUrl = $request->input('backgroundImage');
         }
 
-        // Handle file or URL for thumbnail
-        $thumbnailUrl = $survey->thumbnail;  // Keep existing image if no new file is uploaded
+        $thumbnailUrl = $survey->thumbnail; 
         if ($request->hasFile('thumbnail')) {
             $thumbnail = $request->file('thumbnail');
             $thumbnailUrl = $this->handleAvatarUpload($thumbnail);
@@ -197,8 +196,7 @@ class SurveysController extends Controller
         //     $thumbnail = $request->file('thumbnail');
         //     $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
         // }
-
-        // Update the survey data
+        
         $survey->update([
             'surveyTitle' => $request->surveyTitle,
             'surveyDescription' => $request->surveyDescription,
@@ -250,6 +248,7 @@ class SurveysController extends Controller
                             'smallLabel' => $contentData['smallLabel'] ?? null,
                             'textColor' => $contentData['textColor'] ?? null,
                             'timeFormat' => $contentData['timeFormat'] ?? null,
+                            'title' => $contentData['title'] ?? null,
                             'toggleResponseCopy' => $contentData['toggleResponseCopy'] ?? false,
                         ]);
                     }
