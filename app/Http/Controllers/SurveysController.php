@@ -69,7 +69,7 @@ class SurveysController extends Controller
 
     public function show($id)
     {
-        $survey = Surveys::with('sections.content')->findOrFail($id);
+        $survey = Surveys::with('sections')->findOrFail($id);
 
         return response()->json([
             'success' => true,
