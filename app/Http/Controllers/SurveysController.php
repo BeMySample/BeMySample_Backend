@@ -25,12 +25,11 @@ class SurveysController extends Controller
         $validator = Validator::make($request->all(), [
             'surveyTitle' => 'required|string|max:255',
             'surveyDescription' => 'nullable|string|max:255',
-            'backgroundImage' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
-            'thumbnail' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
+            // 'backgroundImage' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
+            // 'thumbnail' => 'required|file|mimes:jpeg,png,jpg,gif|max:10240',
             'sections' => 'required|array',
             'sections.*.title' => 'required|string|max:255',
             'sections.*.content' => 'nullable|array',
-            'sections.*.contentText' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -43,24 +42,52 @@ class SurveysController extends Controller
 
         $validated = [];
 
-        // Handle file uploads
+        // image handler
+        // if ($request->hasFile('backgroundImage')) {
+        //     $backgroundImage = $request->file('backgroundImage');
+        //     $validated['backgroundImage'] = $backgroundImage->store('background', 'public');
+        // }
+
+        // if ($request->hasFile('thumbnail')) {
+        //     $thumbnail = $request->file('thumbnail');
+        //     $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
+        // }
+
+        //to make the thumbnail and bg image accept file and url string
+        $bgImgUrl = null;
         if ($request->hasFile('backgroundImage')) {
-            $backgroundImage = $request->file('backgroundImage');
-            $validated['backgroundImage'] = $backgroundImage->store('background', 'public');
+            $request->validate([
+                'backgroundImage' => 'file|mimes:jpeg,png,jpg,gif|max:10240',
+            ]);
+            $bgImgUrl = $this->handleAvatarUpload($request->file('backgroundImage'));
+        } elseif ($request->input('backgroundImage')) {
+            $request->validate([
+                'backgroundImage' => 'string|url',
+            ]);
+            $bgImgUrl = $request->input('backgroundImage');
         }
 
+        $thumbnailUrl = null;
         if ($request->hasFile('thumbnail')) {
-            $thumbnail = $request->file('thumbnail');
-            $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
+            $request->validate([
+                'thumbnail' => 'file|mimes:jpeg,png,jpg,gif|max:10240',
+            ]);
+            $thumbnailUrl = $this->handleAvatarUpload($request->file('thumbnail'));
+        } elseif ($request->input('thumbnail')) {
+            $request->validate([
+                'thumbnail' => 'string|url',
+            ]);
+            $thumbnailUrl = $request->input('thumbnail');
         }
 
-        // Create the survey
         $survey = Surveys::create([
             'user_id' => auth()->id(),
             'surveyTitle' => $request->surveyTitle,
             'surveyDescription' => $request->surveyDescription,
-            'backgroundImage' => $validated['backgroundImage'],
-            'thumbnail' => $validated['thumbnail'],
+            // 'backgroundImage' => $validated['backgroundImage'],
+            'backgroundImage' => $bgImgUrl,
+            // 'thumbnail' => $validated['thumbnail'],
+            'thumbnail' => $thumbnailUrl,
             'bgColor' => $request->bgColor,
             'createdByAI' => $request->createdByAI,
             'respondents' => $request->respondents,
@@ -71,7 +98,6 @@ class SurveysController extends Controller
             'status' => $request->status,
         ]);
 
-        // Handle sections and content
         foreach ($request->sections as $sectionData) {
             $section = $survey->sections()->create([
                 'icon' => $sectionData['icon'] ?? null,
@@ -137,23 +163,49 @@ class SurveysController extends Controller
         ]);
 
         $validated = [];
-
-        // Handle file uploads if any
+        // Handle file or URL for backgroundImage
+        $bgImgUrl = $survey->backgroundImage;  // Keep existing image if no new file is uploaded
         if ($request->hasFile('backgroundImage')) {
             $backgroundImage = $request->file('backgroundImage');
-            $validated['backgroundImage'] = $backgroundImage->store('background', 'public');
+            $bgImgUrl = $this->handleAvatarUpload($backgroundImage);
+        } elseif ($request->input('backgroundImage')) {
+            $request->validate([
+                'backgroundImage' => 'string|url',
+            ]);
+            $bgImgUrl = $request->input('backgroundImage');
         }
 
+        // Handle file or URL for thumbnail
+        $thumbnailUrl = $survey->thumbnail;  // Keep existing image if no new file is uploaded
         if ($request->hasFile('thumbnail')) {
             $thumbnail = $request->file('thumbnail');
-            $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
+            $thumbnailUrl = $this->handleAvatarUpload($thumbnail);
+        } elseif ($request->input('thumbnail')) {
+            $request->validate([
+                'thumbnail' => 'string|url',
+            ]);
+            $thumbnailUrl = $request->input('thumbnail');
         }
+
+        // update image only
+        // if ($request->hasFile('backgroundImage')) {
+        //     $backgroundImage = $request->file('backgroundImage');
+        //     $validated['backgroundImage'] = $backgroundImage->store('background', 'public');
+        // }
+
+        // if ($request->hasFile('thumbnail')) {
+        //     $thumbnail = $request->file('thumbnail');
+        //     $validated['thumbnail'] = $thumbnail->store('thumbnail', 'public');
+        // }
 
         // Update the survey data
         $survey->update([
             'surveyTitle' => $request->surveyTitle,
             'surveyDescription' => $request->surveyDescription,
-            'backgroundImage' => $validated['backgroundImage'] ?? $survey->backgroundImage,
+            'backgroundImage' => $bgImgUrl,
+            'thumbnail' => $thumbnailUrl,
+            // 'backgroundImage' => $validated['backgroundImage'] ?? $survey->backgroundImage,
+            // 'thumbnail' => $validated['thumbnail'] ?? $survey->thumbnail,
             'bgColor' => $request->bgColor,
             'createdByAI' => $request->createdByAI,
             'respondents' => $request->respondents,
@@ -162,7 +214,6 @@ class SurveysController extends Controller
             'coinUsed' => $request->coinUsed,
             'kriteria' => $request->kriteria,
             'status' => $request->status,
-            'thumbnail' => $validated['thumbnail'] ?? $survey->thumbnail,
         ]);
 
         // Update sections and content
