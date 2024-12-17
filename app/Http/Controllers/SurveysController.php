@@ -119,6 +119,27 @@ class SurveysController extends Controller
         ], 200);
     }
 
+    public function destroy($id)
+    {
+        $survey = Surveys::with('sections')->find($id);
+
+        if (!$survey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not Found',
+            ], 404);
+        }
+
+        $survey->sections()->delete();
+
+        $survey->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Survey and sections deleted successfully',
+        ], 200);
+    }
+
     private function processImage(Request $request, $fieldName, $default = null)
     {
         if ($request->hasFile($fieldName)) {
