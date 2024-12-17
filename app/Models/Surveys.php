@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Surveys extends Model
 {
     use HasFactory;
-    // protected $fillable = ['survey_title', 'active_section', 'background_image', 'bg_color', 'created_by_ai', 'respondents', 'status'];
     protected $table = 'surveys';
 
     /**

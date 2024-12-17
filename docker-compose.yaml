@@ -1,42 +1,54 @@
+version: '3.8'
+
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: laravel_backend
-    ports:
-      - "8000:8000"
-    networks:
-      - app-network
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:8.0
-    container_name: laravel_mysql
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: laravel
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-    networks:
-      - app-network
-
-  nginx:
+  laravel_nginx:
     image: nginx:latest
-    container_name: laravel_nginx
+    networks:
+      - laravel_network
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./public:/var/www/html/public
+      - ./nginx.conf:/etc/nginx/nginx.conf  
+      - ./src:/var/www/html  
     depends_on:
-      - backend
+      - laravel_backend
+      - mysql_db
+
+  laravel_backend:
+    image: bemysample_backend-backend 
     networks:
-      - app-network
+      - laravel_network
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=somekeyhere
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql_db  
+      - DB_PORT=3306
+      - DB_DATABASE=bms  
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword 
+    volumes:
+      - ./src:/var/www/html  
+
+  mysql_db:
+    image: mysql:8.0  
+    networks:
+      - laravel_network
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Set a root password
+      MYSQL_DATABASE: bms  
+    ports:
+      - "3306:3306"  # port mysqk
+    volumes:
+      - mysql_data:/var/lib/mysql  
 
 networks:
-  app-network:
+  laravel_network:
     driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
