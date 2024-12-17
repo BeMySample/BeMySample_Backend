@@ -28,7 +28,8 @@ class SurveysController extends Controller
             // 'backgroundImage' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
             // 'thumbnail' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
             'sections' => 'required|array|min:1',
-            'sections.*.label' => 'required|string',
+            // 'kriteria' => 'required|array|min:1',
+            'sections.*.label' => 'required|string|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -54,12 +55,14 @@ class SurveysController extends Controller
             'maxRespondents' => $request->maxRespondents,
             'coinAllocated' => $request->coinAllocated,
             'coinUsed' => $request->coinUsed,
-            'kriteria' => $request->kriteria,
             'status' => $request->status,
         ]);
 
         $this->processSections($survey, $request->sections, $survey->id);
+        $this->processKriteria($survey, $request->kriteria, $survey->id);
 
+        // $survey->kriteria()->create($request->kriteria);
+        
         return response()->json([
             'success' => true,
             'message' => 'Survey successfully created',
@@ -69,30 +72,48 @@ class SurveysController extends Controller
 
     public function show($id)
     {
-        $survey = Surveys::with('sections')->findOrFail($id);
+        // $survey = Surveys::with('sections')->findOrFail($id);
+        $survey = Surveys::with(['sections', 'kriteria'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'message' => 'Survey data retrieved successfully',
+            'message' => 'Surveys data retrieved successfully',
             'data' => $survey
         ], 200);
     }
 
+    private function processImage(Request $request, $fieldName, $default = null)
+    {
+        if ($request->hasFile($fieldName)) {
+            return $request->file($fieldName)->store('uploads', 'public');
+        }
+
+        return $request->input($fieldName) ?: $default;
+    }
     public function update(Request $request, $id)
     {
         $survey = Surveys::findOrFail($id);
-
-        $request->validate([
+    
+        $validator = Validator::make($request->all(), [
             'surveyTitle' => 'required|string|max:255',
             'surveyDescription' => 'nullable|string|max:255',
-            // 'backgroundImage' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
-            // 'thumbnail' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:10240|string|url',
-            'sections' => 'nullable|array',
+            'sections' => 'nullable|array|min:1',
+            'sections.*.label' => 'required|string',
+            'kriteria' => 'required|array',
         ]);
-        
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation errors',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+    
         $bgImgUrl = $this->processImage($request, 'backgroundImage', $survey->backgroundImage);
         $thumbnailUrl = $this->processImage($request, 'thumbnail', $survey->thumbnail);
-
+    
+        // Update survey
         $survey->update([
             'surveyTitle' => $request->surveyTitle,
             'surveyDescription' => $request->surveyDescription,
@@ -104,35 +125,37 @@ class SurveysController extends Controller
             'maxRespondents' => $request->maxRespondents,
             'coinAllocated' => $request->coinAllocated,
             'coinUsed' => $request->coinUsed,
-            'kriteria' => $request->kriteria,
             'status' => $request->status,
         ]);
-
+    
+        // Handle sections
         if ($request->has('sections')) {
             $this->processSections($survey, $request->sections, $survey->id);
         }
+        if ($request->has('kriteria')) {
+            $this->processKriteria($survey, $request->kriteria, $survey->id);
+        }
 
+        // if ($request->has('kriteria')) {
+        //     $survey->kriteria()->updateOrCreate([], $request->kriteria);
+        // }
+    
         return response()->json([
             'success' => true,
             'message' => 'Survey updated successfully',
-            'data' => $survey
+            'data' => $survey->load('sections')
         ], 200);
     }
     
-    private function processImage(Request $request, $fieldName, $default = null)
-    {
-        if ($request->hasFile($fieldName)) {
-            return $request->file($fieldName)->store('uploads', 'public');
-        }
-
-        return $request->input($fieldName) ?: $default;
-    }
-
     private function processSections($survey, $sections, $surveyId)
     {
-        foreach ($sections as $sectionData) {
-            $listChoices = $sectionData['listChoices'] ?? null;
+        $existingSectionIds = $survey->sections()->pluck('id')->toArray();
+        $updatedSectionIds = [];
     
+        foreach ($sections as $sectionData) {
+            $sectionId = $sectionData['id'] ?? null;
+    
+            $listChoices = $sectionData['listChoices'] ?? null;
             if (is_array($listChoices) && isset($listChoices[0]) && is_string($listChoices[0])) {
                 $listChoices = array_map(function ($choice, $index) {
                     return [
@@ -141,9 +164,9 @@ class SurveysController extends Controller
                     ];
                 }, $listChoices, array_keys($listChoices));
             }
-
-            $survey->sections()->updateOrCreate(
-                ['id' => $sectionData['id'] ?? null],
+    
+            $section = $survey->sections()->updateOrCreate(
+                ['id' => $sectionId], 
                 [
                     'survey_id' => $surveyId,
                     'icon' => $sectionData['icon'] ?? null,
@@ -157,10 +180,8 @@ class SurveysController extends Controller
                     'dateFormat' => $sectionData['dateFormat'] ?? null,
                     'description' => $sectionData['description'] ?? null,
                     'largeLabel' => $sectionData['largeLabel'] ?? null,
-                    // 'listChoices' => json_encode($sectionData['listChoices']) ?? null,
                     'listChoices' => $listChoices ? json_encode($listChoices) : null,
                     'maxChoices' => $sectionData['maxChoices'] ?? null,
-                    'midLabel' => $sectionData['midLabel'] ?? null,
                     'minChoices' => $sectionData['minChoices'] ?? null,
                     'mustBeFilled' => $sectionData['mustBeFilled'] ?? null,
                     'optionsCount' => $sectionData['optionsCount'] ?? null,
@@ -172,12 +193,52 @@ class SurveysController extends Controller
                     'toggleResponseCopy' => $sectionData['toggleResponseCopy'] ?? null,
                 ]
             );
+    
+            $updatedSectionIds[] = $section->id;
+        }
+    
+        $sectionsToDelete = array_diff($existingSectionIds, $updatedSectionIds);
+        if (!empty($sectionsToDelete)) {
+            $survey->sections()->whereIn('id', $sectionsToDelete)->delete();
         }
     }
 
+    private function processKriteria($survey, $kriteria, $surveyId)
+    {
+        $existingKriteriaIds = $survey->kriteria()->pluck('id')->toArray();
+        $updatedKriteriaIds = [];
+
+        foreach ($kriteria as $kriteriaData) {
+            $kriteriaId = $kriteriaData['id'] ?? null;
+
+            $kriteriaItem = $survey->kriteria()->updateOrCreate(
+                ['id' => $kriteriaId],
+                [
+                    'survey_id' => $surveyId,
+                    'gender_target' => $kriteriaData['gender_target'] ?? null,
+                    'age_target' => $kriteriaData['age_target'] ?? null,
+                    'lokasi' => $kriteriaData['lokasi'] ?? null,
+                    'hobi' => $kriteriaData['hobi'] ?? null,
+                    'pekerjaan' => $kriteriaData['pekerjaan'] ?? null,
+                    'tempat_bekerja' => $kriteriaData['tempat_bekerja'] ?? null,
+                    'responden_target' => $kriteriaData['responden_target'] ?? null,
+                    'poin_foreach' => $kriteriaData['poin_foreach'] ?? null,
+                ]
+            );
+
+            $updatedKriteriaIds[] = $kriteriaItem->id;
+        }
+
+        $kriteriaToDelete = array_diff($existingKriteriaIds, $updatedKriteriaIds);
+        if (!empty($kriteriaToDelete)) {
+            $survey->kriteria()->whereIn('id', $kriteriaToDelete)->delete();
+        }
+    }
+
+
     public function destroy($id)
     {
-        $survey = Surveys::with('sections')->find($id);
+        $survey = Surveys::with(['sections', 'kriteria'])->find($id);
 
         if (!$survey) {
             return response()->json([
@@ -187,12 +248,14 @@ class SurveysController extends Controller
         }
 
         $survey->sections()->delete();
+        $survey->kriteria()->delete();
 
         $survey->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Survey and sections deleted successfully',
+            'message' => 'Surveys deleted Asuccessfully',
         ], 200);
     }
+
 }

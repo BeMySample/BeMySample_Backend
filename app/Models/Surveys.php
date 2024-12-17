@@ -24,7 +24,6 @@ class Surveys extends Model
         'maxRespondents',
         'coinAllocated',
         'coinUsed',
-        'kriteria',
         'status',
         'surveyTitle',
         'surveyDescription',
@@ -35,4 +34,10 @@ class Surveys extends Model
     {
         return $this->hasMany(Sections::class, 'survey_id');
     }
+
+    public function kriteria()
+    {
+        return $this->hasMany(SurveyKriteria::class, 'survey_id');
+    }
+    
 }

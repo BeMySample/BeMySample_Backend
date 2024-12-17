@@ -12,6 +12,7 @@ class SurveyKriteria extends Model
     protected $table = 'survey_kriteria';
 
     protected $fillable = [
+        'survey_id',
         'gender_target',
         'age_target',
         'lokasi',
@@ -21,4 +22,8 @@ class SurveyKriteria extends Model
         'responden_target',
         'poin_foreach',
     ];
+    public function survey()
+    {
+        return $this->belongsTo(Surveys::class, 'survey_id');
+    }
 }
